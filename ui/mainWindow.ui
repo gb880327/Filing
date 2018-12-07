@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>文件归档工具</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label">
@@ -71,12 +71,12 @@
     </property>
     <item>
      <property name="text">
-      <string extracomment="0">复制文件</string>
+      <string extracomment="0">移动文件</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string extracomment="1">移动文件</string>
+      <string extracomment="1">复制文件</string>
      </property>
     </item>
    </widget>
@@ -102,6 +102,15 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="inputMask">
+     <string/>
+    </property>
+    <property name="text">
+     <string notr="true"/>
+    </property>
    </widget>
    <widget class="QToolButton" name="toolButton">
     <property name="geometry">
@@ -112,8 +121,11 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
     <property name="text">
-     <string>...</string>
+     <string>请选择...</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_4">
@@ -138,6 +150,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
    </widget>
    <widget class="QToolButton" name="toolButton_2">
     <property name="geometry">
@@ -148,8 +163,11 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
     <property name="text">
-     <string>...</string>
+     <string>请选择...</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton">
@@ -160,6 +178,9 @@
       <width>621</width>
       <height>51</height>
      </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
      <string>开始</string>
@@ -176,7 +197,6 @@
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>
