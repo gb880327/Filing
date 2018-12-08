@@ -5,8 +5,8 @@ from ui.progress import Ui_Form
 from PyQt5.Qt import *
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox, QFileDialog
 from PyQt5.QtCore import QFile, QTextStream
+from service.filing import Filing
 import BreezeStyleSheets.breeze_resources
-import time
 
 
 class MainWindow(QMainWindow):
@@ -47,12 +47,12 @@ class MainWindow(QMainWindow):
         f_model = self.ui.comboBox_2.currentIndex()
         o_path = self.ui.lineEdit.text()
         t_path = self.ui.lineEdit_2.text()
-        # if o_path is None or o_path == '':
-        #     QMessageBox.warning(None, "操作提示！", "请选择源文件目录！", QMessageBox.Close, QMessageBox.Close)
-        #     return
-        # if t_path is None or t_path == '':
-        #     QMessageBox.warning(None, "操作提示！", "请选择目标文件目录！", QMessageBox.Close, QMessageBox.Close)
-        #     return
+        if o_path is None or o_path == '':
+            QMessageBox.warning(None, "操作提示！", "请选择源文件目录！", QMessageBox.Close, QMessageBox.Close)
+            return
+        if t_path is None or t_path == '':
+            QMessageBox.warning(None, "操作提示！", "请选择目标文件目录！", QMessageBox.Close, QMessageBox.Close)
+            return
         self.progress.open({
             'f_type': f_type,
             'f_model': f_model,
@@ -60,6 +60,10 @@ class MainWindow(QMainWindow):
             't_path': t_path
         })
         self.hide()
+        self.ui.comboBox.setCurrentIndex(0)
+        self.ui.comboBox_2.setCurrentIndex(0)
+        self.ui.lineEdit.clear()
+        self.ui.lineEdit_2.clear()
 
 
 class UpdateUI(QThread):
@@ -76,14 +80,25 @@ class UpdateUI(QThread):
         self.params = params
 
     def run(self):
-        i = 0
-        while i <= 100:
+        filing = Filing(self.params)
+        self.signal.emit({
+            "num": 0,
+            "msg": "=============开始文件整理================"
+        })
+        filing.get_file_list()
+        file_list = filing.create_folder()
+        total = len(file_list)
+
+        for i, f in enumerate(file_list):
+            filing.move_file(f['opath'], f['npath'])
             self.signal.emit({
-                "num": i,
-                "msg": "Copy line " + str(i)
+                "num": int(((i + 1) / total) * 100),
+                "msg": "{0} 移动至 {1}".format(f['opath'], f['npath'])
             })
-            i += 1
-            time.sleep(0.1)
+        self.signal.emit({
+            "num": 100,
+            "msg": "=============结束文件整理================"
+        })
 
 
 class Progress(QWidget):
@@ -99,13 +114,14 @@ class Progress(QWidget):
         self.thread = UpdateUI()
         self.thread.signal.connect(self.callback)
 
-    def closeEvent(self, event: QCloseEvent):
+    def close_window(self):
         if self.progress_num < 100:
-            QMessageBox.question(None, "操作提示！", "确认结束当前任务？")
-            pass
+            self.thread.wait()
+            ret = QMessageBox.question(None, "操作提示！", "确认结束当前任务？", QMessageBox.No | QMessageBox.Yes, QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                self.over()
         else:
             self.over()
-        event.ignore()
 
     def open(self, params: dict):
         self.clear_ui()
@@ -125,14 +141,15 @@ class Progress(QWidget):
         self.ui.textBrowser.setTextCursor(cursor)
 
     @pyqtSlot(dict)
-    def callback(self, params):
-        self.ui.progressBar.setProperty('value', params['num'])
+    def callback(self, params: dict):
         self.ui.textBrowser.insertPlainText(params['msg'] + '\n')
         self.ui.textBrowser.moveCursor(QTextCursor.End)
-        self.progress_num = params['num']
-        if self.progress_num == 100:
-            self.ui.pushButton.setProperty('enabled', True)
-            self.thread.exit(0)
+        if 'num' in params.keys():
+            self.ui.progressBar.setProperty('value', params['num'])
+            self.progress_num = params['num']
+            if self.progress_num >= 100:
+                self.ui.pushButton.setProperty('enabled', True)
+                self.thread.exit()
 
 
 if __name__ == '__main__':
