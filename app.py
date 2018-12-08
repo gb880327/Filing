@@ -1,5 +1,6 @@
 #!python3
 import sys
+import time
 from ui.mainWindow import Ui_MainWindow
 from ui.progress import Ui_Form
 from PyQt5.QtCore import Qt
@@ -14,7 +15,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, win_ui):
         super(MainWindow, self).__init__()
-        self.setFixedSize(669, 260)
+        self.setFixedSize(669, 310)
         self.ui = win_ui
         win_ui.setupUi(self)
         self.progress = Progress(Ui_Form())
@@ -22,6 +23,8 @@ class MainWindow(QMainWindow):
         self.ui.toolButton.clicked.connect(lambda: self.openfile_namedialog(0))
         self.ui.toolButton_2.clicked.connect(lambda: self.openfile_namedialog(1))
         self.progress.signal.connect(self.over)
+        self.ui.checkBox_2.setVisible(False)
+        self.ui.checkBox.toggled.connect(self.toggled)
 
     def openfile_namedialog(self, index):
         file_dialog = QFileDialog()
@@ -35,17 +38,12 @@ class MainWindow(QMainWindow):
             else:
                 self.ui.lineEdit_2.setText(path)
 
-    def open(self):
-        self.show()
-
     @pyqtSlot()
     def over(self):
         self.show()
         self.progress.hide()
 
     def open_form(self):
-        f_type = self.ui.comboBox.currentIndex()
-        f_model = self.ui.comboBox_2.currentIndex()
         o_path = self.ui.lineEdit.text()
         t_path = self.ui.lineEdit_2.text()
         if o_path is None or o_path == '':
@@ -55,16 +53,26 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(None, "操作提示！", "请选择目标文件目录！", QMessageBox.Close, QMessageBox.Close)
             return
         self.progress.open({
-            'f_type': f_type,
-            'f_model': f_model,
+            'f_type': self.ui.comboBox.currentIndex(),
+            'f_model': self.ui.comboBox_2.currentIndex(),
             'o_path': o_path,
-            't_path': t_path
+            't_path': t_path,
+            'hasCompress': self.ui.checkBox.isChecked(),
+            'hasClear': self.ui.checkBox_2.isChecked()
         })
         self.hide()
+        self.ui.checkBox.setChecked(False)
+        self.ui.checkBox_2.setChecked(False)
+        self.ui.checkBox_2.setVisible(False)
         self.ui.comboBox.setCurrentIndex(0)
         self.ui.comboBox_2.setCurrentIndex(0)
         self.ui.lineEdit.clear()
         self.ui.lineEdit_2.clear()
+
+    def toggled(self, checked):
+        self.ui.checkBox_2.setVisible(checked)
+        if not checked:
+            self.ui.checkBox_2.setChecked(False)
 
 
 class UpdateUI(QThread):
@@ -92,10 +100,14 @@ class UpdateUI(QThread):
 
         for i, f in enumerate(file_list):
             filing.move_file(f['opath'], f['npath'])
+            num = int(((i + 1) / total) * 100)
+            num = num - 10 if num - 10 >= 0 else 0
             self.signal.emit({
-                "num": int(((i + 1) / total) * 100),
+                "num": num,
                 "msg": "{0} 移动至 {1}".format(f['opath'], f['npath'])
             })
+        if self.params['hasCompress']:
+            filing.compress_file(time.strftime("%Y%m%d", time.localtime()) + '.zip')
         self.signal.emit({
             "num": 100,
             "msg": "=============结束文件整理================"
@@ -162,5 +174,5 @@ if __name__ == '__main__':
     app.setStyleSheet(stream.readAll())
 
     main = MainWindow(Ui_MainWindow())
-    main.open()
+    main.show()
     sys.exit(app.exec_())

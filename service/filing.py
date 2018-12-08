@@ -2,6 +2,7 @@
 import os
 import time
 import shutil
+import zipfile
 
 
 class Filing(object):
@@ -11,6 +12,7 @@ class Filing(object):
         self.model = params['f_model']
         self.original_path = params['o_path']
         self.target_path = params['t_path']
+        self.has_clear = params['hasClear']
         self.datelist = {}
 
     @staticmethod
@@ -51,3 +53,19 @@ class Filing(object):
             shutil.move(opath, newpath)
         else:
             shutil.copy(opath, newpath)
+
+    def compress_file(self, zip_file_name: str):
+        filelist = []
+        for root, dirs, files in os.walk(self.target_path):
+            for name in files:
+                filelist.append(os.path.join(root, name))
+
+        zf = zipfile.ZipFile(os.path.join(self.target_path, zip_file_name), 'w', zipfile.ZIP_DEFLATED, allowZip64=True)
+        for tar in filelist:
+            arcname = tar[len(self.target_path):]
+            zf.write(tar, arcname)
+        zf.close()
+        if self.has_clear:
+            for root, dirs, files in os.walk(self.target_path):
+                for f in dirs:
+                    shutil.rmtree(os.path.join(root, f))
