@@ -1,5 +1,5 @@
 # -*- mode: python -*-
-APP_NAME='Filing'
+APP_NAME='RFTool'
 block_cipher = None
 
 
@@ -21,7 +21,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='Filing',
+          name='RFTool',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -33,9 +33,9 @@ coll = COLLECT(exe,
                a.datas,
                strip=False,
                upx=True,
-               name='Filing')
+               name='RFTool')
 app = BUNDLE(coll,
-             name='Filing.app',
+             name='RFTool.app',
              icon='/Users/rookie/Workspace/python/organizeFile/icon/favicon.icns',
              bundle_identifier=None,
              info_plist={

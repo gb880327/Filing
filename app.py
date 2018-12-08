@@ -2,7 +2,8 @@
 import sys
 from ui.mainWindow import Ui_MainWindow
 from ui.progress import Ui_Form
-from PyQt5.Qt import *
+from PyQt5.QtCore import Qt
+from PyQt5.Qt import (QThread, pyqtSlot, pyqtSignal, QTextCursor)
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox, QFileDialog
 from PyQt5.QtCore import QFile, QTextStream
 from service.filing import Filing
