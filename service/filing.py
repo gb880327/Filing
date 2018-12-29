@@ -39,9 +39,12 @@ class Filing(object):
     # 获取图片的原始创建时间
     @staticmethod
     def get_file_org_createtime(file_path):
-        img = Image.open(file_path)
-        info = img._getexif()
-        return info[306] if info else None
+        try:
+            img = Image.open(file_path)
+            info = img._getexif()
+        except AttributeError:
+            return None
+        return info[306] if info and 306 in info else None
 
     def get_file_list(self):
         filelist = os.listdir(self.original_path)

@@ -1,6 +1,7 @@
 #!python3
 import sys
 import time
+import traceback
 from ui.mainWindow import Ui_MainWindow
 from ui.progress import Ui_Form
 from PyQt5.QtCore import Qt
@@ -89,29 +90,39 @@ class UpdateUI(QThread):
         self.params = params
 
     def run(self):
-        filing = Filing(self.params)
-        self.signal.emit({
-            "num": 0,
-            "msg": "=============开始文件整理================"
-        })
-        filing.get_file_list()
-        file_list = filing.create_folder()
-        total = len(file_list)
-
-        for i, f in enumerate(file_list):
-            filing.move_file(f['opath'], f['npath'])
-            num = int(((i + 1) / total) * 100)
-            num = num - 10 if num - 10 >= 0 else 0
+        try:
+            filing = Filing(self.params)
             self.signal.emit({
-                "num": num,
-                "msg": "{0} 移动至 {1}".format(f['opath'], f['npath'])
+                "num": 0,
+                "msg": "=============开始文件整理================"
             })
-        if self.params['hasCompress']:
-            filing.compress_file(time.strftime("%Y%m%d", time.localtime()) + '.zip')
-        self.signal.emit({
-            "num": 100,
-            "msg": "=============结束文件整理================"
-        })
+            filing.get_file_list()
+            file_list = filing.create_folder()
+            total = len(file_list)
+
+            for i, f in enumerate(file_list):
+                filing.move_file(f['opath'], f['npath'])
+                num = int(((i + 1) / total) * 100)
+                num = num - 10 if num - 10 >= 0 else 0
+                self.signal.emit({
+                    "num": num,
+                    "msg": "{0} 移动至 {1}".format(f['opath'], f['npath'])
+                })
+            if self.params['hasCompress']:
+                self.signal.emit({
+                    "num": 90,
+                    "msg": "=============开始压缩文件============="
+                })
+                filing.compress_file(time.strftime("%Y%m%d", time.localtime()) + '.zip')
+            self.signal.emit({
+                "num": 100,
+                "msg": "=============结束文件整理================"
+            })
+        except Exception as e:
+            self.signal.emit({
+                "num": -1,
+                "msg": traceback.format_exc()
+            })
 
 
 class Progress(QWidget):
@@ -120,7 +131,7 @@ class Progress(QWidget):
 
     def __init__(self, win_ui):
         super(Progress, self).__init__()
-        self.setWindowFlag(Qt.FramelessWindowHint)
+        # self.setWindowFlag(Qt.FramelessWindowHint)
         self.ui = win_ui
         win_ui.setupUi(self)
         self.ui.pushButton.clicked.connect(self.over)
@@ -158,9 +169,9 @@ class Progress(QWidget):
         self.ui.textBrowser.insertPlainText(params['msg'] + '\n')
         self.ui.textBrowser.moveCursor(QTextCursor.End)
         if 'num' in params.keys():
-            self.ui.progressBar.setProperty('value', params['num'])
+            self.ui.progressBar.setProperty('value', params['num'] if params['num'] >= 0 else 0)
             self.progress_num = params['num']
-            if self.progress_num >= 100:
+            if self.progress_num >= 100 or self.progress_num == -1:
                 self.ui.pushButton.setProperty('enabled', True)
                 self.thread.exit()
 
