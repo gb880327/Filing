@@ -3,6 +3,7 @@ import os
 import time
 import shutil
 import zipfile
+from PIL import Image
 
 
 class Filing(object):
@@ -21,8 +22,19 @@ class Filing(object):
         return time.strftime('%Y-%m-%d', timestruct)
 
     def get_filecreatetime(self, file_path):
-        ft = os.path.getctime(file_path) if self.filing_type == 0 else os.path.getmtime(file_path)
-        return self.timestamptotime(ft)
+        if self.filing_type == 0:
+            ft = Filing.get_file_org_createtime(file_path)
+            ft = ft if ft is not None else os.path.getctime(file_path)
+        else:
+            ft = os.path.getmtime(file_path)
+        return ft[:10].replace(':','-') if isinstance(ft, str) else self.timestamptotime(ft)
+
+    # 获取图片的原始创建时间
+    @staticmethod
+    def get_file_org_createtime(file_path):
+        img = Image.open(file_path)
+        info = img._getexif()
+        return info[306] if info else None
 
     def get_file_list(self):
         filelist = os.listdir(self.original_path)
