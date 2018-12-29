@@ -23,11 +23,18 @@ class Filing(object):
 
     def get_filecreatetime(self, file_path):
         if self.filing_type == 0:
-            ft = Filing.get_file_org_createtime(file_path)
+            ft = None
+            if Filing.is_imagefile(file_path):
+                ft = Filing.get_file_org_createtime(file_path)
             ft = ft if ft is not None else os.path.getctime(file_path)
         else:
             ft = os.path.getmtime(file_path)
-        return ft[:10].replace(':','-') if isinstance(ft, str) else self.timestamptotime(ft)
+        return ft[:10].replace(':', '-') if isinstance(ft, str) else self.timestamptotime(ft)
+
+    @staticmethod
+    def is_imagefile(file_path: str):
+        suffix = file_path[file_path.rfind('.'):]
+        return suffix.lower().strip() in ['.jpg', '.png', '.bmp', '.jpeg', '.gif']
 
     # 获取图片的原始创建时间
     @staticmethod
