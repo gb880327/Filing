@@ -4,7 +4,6 @@ import time
 import traceback
 from ui.mainWindow import Ui_MainWindow
 from ui.progress import Ui_Form
-from PyQt5.QtCore import Qt
 from PyQt5.Qt import (QThread, pyqtSlot, pyqtSignal, QTextCursor)
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox, QFileDialog
 from PyQt5.QtCore import QFile, QTextStream
@@ -121,7 +120,7 @@ class UpdateUI(QThread):
         except Exception as e:
             self.signal.emit({
                 "num": -1,
-                "msg": traceback.format_exc()
+                "msg": '=============错误信息================\n' + traceback.format_exc()
             })
 
 
